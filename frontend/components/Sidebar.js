@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Newspaper, Target, BookOpen } from 'lucide-react';
+import { Newspaper, Target, BookOpen, Sparkles } from 'lucide-react';
 
 export default function Sidebar() {
   return (
@@ -13,6 +13,10 @@ export default function Sidebar() {
         <Link href="/" className="nav-item">
           <BookOpen size={20} />
           Top News
+        </Link>
+        <Link href="/summarize" className="nav-item">
+          <Sparkles size={20} />
+          Summarize
         </Link>
         <Link href="/for-you" className="nav-item active">
           <Target size={20} />
