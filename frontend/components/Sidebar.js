@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Newspaper, Target, BookOpen, Sparkles } from 'lucide-react';
+import { Newspaper, Target, BookOpen, Sparkles, Library } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -20,6 +20,10 @@ export default function Sidebar() {
             <BookOpen size={20} />
             Top News
           </Link>
+          <Link href="/newspapers" className={`nav-item ${pathname === '/newspapers' ? 'active' : ''}`}>
+            <Library size={20} />
+            Newspapers
+          </Link>
           <Link href="/summarize" className={`nav-item ${pathname === '/summarize' ? 'active' : ''}`}>
             <Sparkles size={20} />
             Summarize
@@ -36,6 +40,10 @@ export default function Sidebar() {
         <Link href="/" className={`mobile-nav-item ${pathname === '/' ? 'active' : ''}`}>
           <BookOpen size={22} />
           <span>Top News</span>
+        </Link>
+        <Link href="/newspapers" className={`mobile-nav-item ${pathname === '/newspapers' ? 'active' : ''}`}>
+          <Library size={22} />
+          <span>Papers</span>
         </Link>
         <Link href="/summarize" className={`mobile-nav-item ${pathname === '/summarize' ? 'active' : ''}`}>
           <Sparkles size={22} />
