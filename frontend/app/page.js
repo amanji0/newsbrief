@@ -42,7 +42,7 @@ export default function Home() {
   const [selectedArticle, setSelectedArticle] = useState(TOP_NEWS[0]);
 
   return (
-    <div className="flex w-full gap-8">
+    <div className="responsive-flex">
       {/* News Feed */}
       <div className="news-feed flex-1">
         <h2 className="text-xl font-bold mb-4 col-span-full">Top Stories Today</h2>
@@ -78,7 +78,7 @@ export default function Home() {
       </div>
 
       {/* AI Summary Panel */}
-      <div className="summary-panel hidden lg:flex">
+      <div className="summary-panel flex">
         <div className="summary-header">
           <Sparkles size={18} />
           <span>AI Summarization</span>
