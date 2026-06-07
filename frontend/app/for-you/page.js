@@ -10,7 +10,7 @@ export default function ForYou() {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const response = await axios.get('http://localhost:5000/api/foryou');
+        const response = await axios.get('http://localhost:5001/api/foryou');
         setArticles(response.data);
       } catch (error) {
         console.error("Error fetching news:", error);
