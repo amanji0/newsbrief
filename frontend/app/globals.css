@@ -1,0 +1,345 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --bg-color: #F0F4F8; /* Lite fade blue background */
+  --surface-color: #FFFFFF;
+  --primary-color: #3B5B88; /* Industrial blue */
+  --primary-hover: #2A4365;
+  --text-main: #102A43; /* Dark slate */
+  --text-muted: #627D98;
+  --accent-color: #82A1C1;
+  --border-color: #D9E2EC;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(16, 42, 67, 0.05);
+  --shadow-md: 0 4px 12px rgba(16, 42, 67, 0.08);
+  --shadow-hover: 0 8px 24px rgba(16, 42, 67, 0.12);
+  
+  /* Layout */
+  --sidebar-width: 250px;
+  --header-height: 70px;
+  --border-radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Layout Architecture */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--surface-color);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  z-index: 10;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 2.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.nav-item:hover, .nav-item.active {
+  background-color: var(--bg-color);
+  color: var(--primary-color);
+}
+
+.nav-item svg {
+  stroke-width: 2.5px;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  height: var(--header-height);
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  z-index: 5;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-color);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  gap: 0.5rem;
+  width: 300px;
+}
+
+.header-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main);
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+}
+
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  gap: 2rem;
+}
+
+/* News Feed Grid */
+.news-feed {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.news-card {
+  background: var(--surface-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-color);
+}
+
+.news-card-image {
+  height: 160px;
+  background-color: var(--border-color);
+  background-size: cover;
+  background-position: center;
+}
+
+.news-card-content {
+  padding: 1.25rem;
+}
+
+.news-source {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.news-title {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--bg-color);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* AI Summary Panel */
+.summary-panel {
+  width: 350px;
+  background: var(--surface-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: fit-content;
+  max-height: calc(100vh - 4rem - var(--header-height));
+  overflow-y: auto;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--bg-color);
+}
+
+.summary-content {
+  font-size: 0.95rem;
+  color: var(--text-main);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.btn-verify {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--bg-color);
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-verify:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Loaders */
+.shimmer {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%; 
+  animation-duration: 1.5s;
+  animation-fill-mode: forwards; 
+  animation-iteration-count: infinite;
+  animation-name: placeholderShimmer;
+  animation-timing-function: linear;
+}
+
+@keyframes placeholderShimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+/* Exam Context Utility Classes */
+.exam-foryou-page { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+.exam-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.exam-title { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.exam-subtitle { font-size: 0.875rem; color: var(--text-muted); }
+.exam-loading-state { padding: 2rem; text-align: center; background: white; border-radius: 0.75rem; box-shadow: var(--shadow-sm); }
+.exam-card { display: flex; flex-direction: column; background: var(--surface-color); border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+@media (min-width: 768px) { .exam-card { flex-direction: row; } }
+.exam-card-main { padding: 1.5rem; flex: 1; border-bottom: 1px solid var(--border-color); }
+@media (min-width: 768px) { .exam-card-main { border-bottom: none; border-right: 1px solid var(--border-color); } }
+.exam-card-context { padding: 1.5rem; background: var(--bg-color); }
+@media (min-width: 768px) { .exam-card-context { width: 350px; } }
+.exam-context-heading { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-color); margin-bottom: 1rem; }
+.exam-context-text { font-size: 0.875rem; line-height: 1.6; color: var(--text-main); }
+.exam-card-title { font-size: 1.25rem; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.75rem; line-height: 1.3; }
+.exam-card-summary { color: var(--text-muted); line-height: 1.6; }
+.exam-meta-link { font-weight: 600; color: var(--primary-color); }

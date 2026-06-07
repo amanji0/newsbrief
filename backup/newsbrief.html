@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NewsBrief — AI Newspaper Summarizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-50: #EDF4FB;
+    --blue-100: #C8DEFF;
+    --blue-200: #9DC2F0;
+    --blue-400: #5B9BD5;
+    --blue-600: #2B6CB0;
+    --blue-800: #1A4A80;
+    --blue-900: #0D2D54;
+    --slate-50: #F7F9FC;
+    --slate-100: #EBF0F6;
+    --slate-200: #D1DCE8;
+    --slate-400: #8FA4BB;
+    --slate-600: #4F6D8C;
+    --slate-800: #263D55;
+    --slate-900: #0E1F30;
+    --white: #FFFFFF;
+    --accent: #3A7BD5;
+    --accent-light: #EEF5FF;
+    --accent-glow: rgba(58,123,213,0.12);
+    --green: #1A8C5B;
+    --green-light: #E6F4EE;
+    --amber: #B87A14;
+    --amber-light: #FEF5E0;
+    --red: #C0392B;
+    --red-light: #FDECEB;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
+    --shadow-sm: 0 1px 3px rgba(14,31,48,0.08), 0 1px 2px rgba(14,31,48,0.04);
+    --shadow-md: 0 4px 16px rgba(14,31,48,0.10), 0 2px 4px rgba(14,31,48,0.06);
+    --shadow-lg: 0 12px 40px rgba(14,31,48,0.14), 0 4px 8px rgba(14,31,48,0.06);
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Outfit', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--blue-50);
+    color: var(--slate-800);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 240px;
+    background: var(--white);
+    border-right: 1px solid var(--slate-200);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .logo-area {
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--slate-900);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: var(--slate-400);
+    padding: 16px 20px 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--slate-600);
+    border-radius: 0;
+    transition: background var(--transition), color var(--transition);
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-body);
+  }
+
+  .nav-item:hover { background: var(--slate-50); color: var(--slate-900); }
+  .nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+
+  .nav-icon {
+    width: 18px; height: 18px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  .newspaper-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+  }
+
+  .newspaper-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--slate-600);
+    transition: background var(--transition), color var(--transition);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-body);
+  }
+
+  .newspaper-item:hover { background: var(--slate-50); color: var(--slate-900); }
+  .newspaper-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+
+  .paper-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--slate-100);
+  }
+
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    width: 30px; height: 30px;
+    background: var(--blue-100);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--slate-800);
+  }
+
+  .user-plan {
+    font-size: 11px;
+    color: var(--slate-400);
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--slate-200);
+    padding: 0 32px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    gap: 10px;
+    flex: 1;
+    max-width: 440px;
+    height: 38px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .search-bar:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: var(--white);
+  }
+
+  .search-bar input {
+    border: none; background: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--slate-800);
+    flex: 1;
+    outline: none;
+  }
+
+  .search-bar input::placeholder { color: var(--slate-400); }
+
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .btn-primary:hover { background: var(--blue-600); border-color: var(--blue-600); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--slate-600);
+    border-color: var(--slate-200);
+  }
+
+  .btn-outline:hover { background: var(--slate-50); border-color: var(--slate-400); color: var(--slate-800); }
+
+  .btn-icon {
+    width: 36px; height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-md);
+  }
+
+  /* PAGE CONTENT */
+  .page-content { padding: 28px 32px; flex: 1; }
+
+  /* HERO / HEADER */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 20px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--slate-900);
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    font-size: 13.5px;
+    color: var(--slate-400);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.purple::before { background: #7B5EA7; }
+
+  .stat-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .stat-icon.blue { background: var(--accent-light); }
+  .stat-icon.green { background: var(--green-light); }
+  .stat-icon.amber { background: var(--amber-light); }
+  .stat-icon.purple { background: #F3EEFF; }
+
+  .stat-icon svg { width: 16px; height: 16px; }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--slate-900);
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 12.5px;
+    color: var(--slate-400);
+    font-weight: 400;
+  }
+
+  /* NEWSPAPER CARD (featured) */
+  .featured-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--slate-400);
+    margin-bottom: 14px;
+  }
+
+  .papers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .paper-card {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    cursor: pointer;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .paper-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+
+  .paper-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .paper-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+
+  .paper-logo-circle {
+    width: 42px; height: 42px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 400;
+    flex-shrink: 0;
+    letter-spacing: -1px;
+  }
+
+  .paper-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+
+  .paper-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--slate-900);
+    margin-bottom: 3px;
+  }
+
+  .paper-country {
+    font-size: 12.5px;
+    color: var(--slate-400);
+  }
+
+  .paper-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--slate-100);
+  }
+
+  .paper-meta-item {
+    font-size: 12px;
+    color: var(--slate-500);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .paper-meta-item svg { width: 13px; height: 13px; opacity: 0.6; }
+
+  /* SUMMARIZER PANEL */
+  .summarizer-panel {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .summarizer-topbar {
+    padding: 20px 24px 0;
+    border-bottom: 1px solid var(--slate-100);
+  }
+
+  .summarizer-tabs {
+    display: flex;
+    gap: 0;
+    margin-top: 16px;
+  }
+
+  .summarizer-tab {
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-family: var(--font-body);
+    color: var(--slate-500);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition);
+    font-weight: 400;
+  }
+
+  .summarizer-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .summarizer-tab:hover:not(.active) { color: var(--slate-800); }
+
+  .section-picker {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--slate-400);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .section-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--slate-200);
+    background: var(--white);
+    color: var(--slate-600);
+    transition: all var(--transition);
+    font-family: var(--font-body);
+  }
+
+  .section-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .section-chip.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+  .section-chip svg { width: 12px; height: 12px; }
+
+  /* SUMMARIZER CONTENT */
+  .summarizer-content { padding: 24px; }
+
+  .newspaper-picker-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--slate-50);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--slate-200);
+  }
+
+  .newspaper-picker-inline label {
+    font-size: 13px;
+    color: var(--slate-500);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .newspaper-picker-inline select {
+    border: none;
+    background: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--slate-800);
+    flex: 1;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .url-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .url-input {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    gap: 10px;
+    height: 42px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .url-input:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: var(--white);
+  }
+
+  .url-input input {
+    border: none; background: none;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    color: var(--slate-800);
+    flex: 1;
+    outline: none;
+  }
+
+  .url-input input::placeholder { color: var(--slate-400); }
+
+  /* AI SUMMARY OUTPUT */
+  .summary-output {
+    display: none;
+  }
+
+  .summary-output.visible { display: block; }
+
+  .summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .summary-source {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .source-logo {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 13px;
+  }
+
+  .source-info { font-size: 13px; color: var(--slate-500); }
+  .source-name { font-weight: 600; color: var(--slate-800); }
+
+  .summary-actions { display: flex; gap: 8px; }
+
+  .verify-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+    cursor: pointer;
+  }
+
+  .verify-badge.verified {
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  .verify-badge svg { width: 12px; height: 12px; }
+
+  /* ARTICLE CARDS */
+  .articles-grid { display: flex; flex-direction: column; gap: 16px; }
+
+  .article-card {
+    background: var(--white);
+    border: 1px solid var(--slate-100);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .article-card:hover { border-color: var(--slate-200); box-shadow: var(--shadow-md); }
+
+  .article-card-inner {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 0;
+  }
+
+  .article-body { padding: 18px 20px; }
+
+  .article-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .article-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--slate-900);
+    line-height: 1.3;
+    margin-bottom: 10px;
+    letter-spacing: -0.2px;
+  }
+
+  .summary-text {
+    font-size: 13.5px;
+    color: var(--slate-600);
+    line-height: 1.7;
+  }
+
+  .article-summary-ai {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13.5px;
+    color: var(--blue-800);
+    line-height: 1.65;
+  }
+
+  .ai-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .ai-label svg { width: 11px; height: 11px; }
+
+  .article-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--slate-50);
+    border-top: 1px solid var(--slate-100);
+    gap: 10px;
+  }
+
+  .article-meta { display: flex; align-items: center; gap: 14px; }
+
+  .article-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--slate-400);
+  }
+
+  .article-meta-item svg { width: 12px; height: 12px; }
+
+  .article-image {
+    background: var(--slate-100);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .article-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--slate-400);
+    font-size: 12px;
+  }
+
+  .article-image-placeholder svg { width: 28px; height: 28px; opacity: 0.4; }
+
+  /* READING MODE */
+  .reading-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(14,31,48,0.45);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .reading-modal.open { display: flex; }
+
+  .reading-panel {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    max-width: 720px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .reading-panel-header {
+    padding: 22px 28px 18px;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 10;
+  }
+
+  .reading-panel-body { padding: 28px; }
+
+  .reading-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--slate-900);
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+    margin-bottom: 8px;
+  }
+
+  .reading-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .reading-meta-item {
+    font-size: 12.5px;
+    color: var(--slate-400);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .reading-section {
+    margin-bottom: 22px;
+  }
+
+  .reading-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--slate-400);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .reading-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--slate-100);
+  }
+
+  .ai-summary-block {
+    background: var(--accent-light);
+    border: 1px solid var(--blue-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    margin-bottom: 22px;
+  }
+
+  .ai-summary-block p {
+    font-size: 15px;
+    color: var(--blue-800);
+    line-height: 1.75;
+  }
+
+  .key-points { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+
+  .key-point {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 11px 14px;
+    background: var(--slate-50);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--slate-100);
+  }
+
+  .key-point-num {
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .key-point p { font-size: 13.5px; color: var(--slate-700); line-height: 1.6; }
+
+  /* VERIFY PANEL */
+  .verify-panel {
+    padding: 16px 20px;
+    background: var(--green-light);
+    border: 1px solid #A8E6C8;
+    border-radius: var(--radius-lg);
+    margin-bottom: 20px;
+  }
+
+  .verify-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .verify-header svg { width: 16px; height: 16px; }
+
+  .verify-sources { display: flex; flex-direction: column; gap: 6px; }
+
+  .verify-source-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    background: rgba(255,255,255,0.7);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+  }
+
+  .verify-source-name { color: var(--slate-700); font-weight: 500; }
+  .verify-source-status { color: var(--green); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .verify-source-status svg { width: 12px; height: 12px; }
+
+  /* LOADING STATE */
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    gap: 16px;
+  }
+
+  .loader-ring {
+    width: 40px; height: 40px;
+    border: 3px solid var(--blue-100);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 14px;
+    color: var(--slate-400);
+  }
+
+  .loading-sub {
+    font-size: 12.5px;
+    color: var(--slate-300);
+    font-family: var(--font-mono);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* SENTIMENT */
+  .sentiment-bar-wrap { margin-bottom: 20px; }
+  .sentiment-label { font-size: 12px; color: var(--slate-400); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .sentiment-bar {
+    height: 6px;
+    background: var(--slate-100);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .sentiment-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+  .sentiment-fill.positive { background: var(--green); }
+  .sentiment-fill.negative { background: var(--red); }
+  .sentiment-fill.neutral { background: var(--amber); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--slate-400);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 14px; }
+  .empty-title { font-size: 16px; font-weight: 500; color: var(--slate-600); margin-bottom: 6px; }
+  .empty-sub { font-size: 13.5px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--slate-400); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .papers-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+  /* TOOLTIP */
+  [data-tooltip] { position: relative; }
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--slate-900);
+    color: #fff;
+    font-size: 11.5px;
+    padding: 4px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 999;
+  }
+  [data-tooltip]:hover::after { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo-area">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M8 4v16M2 9h6M2 14h6M14 9h6M14 14h6M14 4v4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">NewsBrief</div>
+        <div class="logo-tag">AI Summarizer</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 12px 8px;">
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('summarize')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/><path d="M16 3l2 2 4-4"/></svg>
+      AI Summarize
+    </button>
+    <button class="nav-item" onclick="showPage('saved')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Saved
+    </button>
+  </div>
+
+  <div class="sidebar-section-label">Newspapers</div>
+
+  <div class="newspaper-list">
+    <button class="newspaper-item active" onclick="selectPaper('nyt')">
+      <span class="paper-dot" style="background:#1A1A1A;"></span> The New York Times
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('guardian')">
+      <span class="paper-dot" style="background:#052962;"></span> The Guardian
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('bbc')">
+      <span class="paper-dot" style="background:#BB1919;"></span> BBC News
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('bloomberg')">
+      <span class="paper-dot" style="background:#000000;"></span> Bloomberg
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('reuters')">
+      <span class="paper-dot" style="background:#FF8000;"></span> Reuters
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('wsj')">
+      <span class="paper-dot" style="background:#004993;"></span> Wall Street Journal
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('toi')">
+      <span class="paper-dot" style="background:#E03A3C;"></span> Times of India
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('aljazeera')">
+      <span class="paper-dot" style="background:#B3982A;"></span> Al Jazeera
+    </button>
+    <button class="newspaper-item" onclick="selectPaper('hindu')">
+      <span class="paper-dot" style="background:#E8332A;"></span> The Hindu
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">AR</div>
+      <div>
+        <div class="user-name">Arjun R.</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="search-bar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-400); flex-shrink:0;">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search news, topics, or articles…" />
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="showPage('summarize')" style="font-size:13px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/><path d="M16 3l2 2 4-4"/></svg>
+        Summarize URL
+      </button>
+      <button class="btn btn-primary" onclick="openReading()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Read Summary
+      </button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page-content">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Good Morning, Arjun ✦</div>
+        <div class="page-subtitle">Sunday, June 7, 2026 · Here's your curated news brief</div>
+      </div>
+      <button class="btn btn-outline" style="font-size:13px; white-space:nowrap; display:flex; align-items:center; gap:6px;" onclick="showPage('summarize')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Add newspaper
+      </button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card blue">
+        <div class="stat-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="stat-value">9</div>
+        <div class="stat-label">Newspapers tracked</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/><path d="M16 3l2 2 4-4"/></svg>
+        </div>
+        <div class="stat-value">147</div>
+        <div class="stat-label">Articles summarized</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-value">4.2h</div>
+        <div class="stat-label">Reading time saved</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7B5EA7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+        </div>
+        <div class="stat-value">98%</div>
+        <div class="stat-label">Source verified</div>
+      </div>
+    </div>
+
+    <!-- NEWSPAPERS -->
+    <div class="featured-section-title">Your Newspapers</div>
+    <div class="papers-grid" id="papersGrid">
+
+      <div class="paper-card selected" onclick="selectAndShowPaper('nyt')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#F0F0F0; color:#1A1A1A;">NYT</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">The New York Times</div>
+        <div class="paper-country">United States · English</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 12m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            24 articles
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-card" onclick="selectAndShowPaper('guardian')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#052962; color:#fff;">GRD</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">The Guardian</div>
+        <div class="paper-country">United Kingdom · English</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 8m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            18 articles
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-card" onclick="selectAndShowPaper('bbc')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#BB1919; color:#fff;">BBC</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">BBC News</div>
+        <div class="paper-country">United Kingdom · Global</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 3m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            31 articles
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-card" onclick="selectAndShowPaper('bloomberg')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#1A1A1A; color:#fff;">BLP</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">Bloomberg</div>
+        <div class="paper-country">United States · Finance</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 5m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            19 articles
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-card" onclick="selectAndShowPaper('toi')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#E03A3C; color:#fff;">TOI</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">Times of India</div>
+        <div class="paper-country">India · English</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 2m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            27 articles
+          </div>
+        </div>
+      </div>
+
+      <div class="paper-card" onclick="selectAndShowPaper('reuters')">
+        <div class="paper-card-header">
+          <div class="paper-logo-circle" style="background:#FF8000; color:#fff;">REU</div>
+          <span class="paper-badge" style="background:#E8F5E9; color:#1B5E20;">Live</span>
+        </div>
+        <div class="paper-name">Reuters</div>
+        <div class="paper-country">Global · Wire Service</div>
+        <div class="paper-meta">
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 8v4l3 3"/></svg>
+            Updated 1m ago
+          </div>
+          <div class="paper-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            41 articles
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TODAY'S ARTICLES -->
+    <div class="featured-section-title" style="margin-bottom:16px;">Today's Briefing — The New York Times</div>
+
+    <div class="articles-grid">
+
+      <!-- Article 1 -->
+      <div class="article-card fade-in">
+        <div class="article-card-inner">
+          <div class="article-body">
+            <div class="article-category" style="background:#E3F2FD; color:#1565C0;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              World
+            </div>
+            <div class="article-title">G7 Leaders Reach Landmark Agreement on AI Governance Framework</div>
+            <div class="summary-text">World leaders finalized a sweeping accord setting global standards for the development and deployment of artificial intelligence systems, marking the most significant international consensus on technology regulation in history.</div>
+            <div class="article-summary-ai">
+              <div class="ai-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                AI Summary
+              </div>
+              G7 nations agreed on binding rules for AI transparency, safety testing, and data use. The deal includes mandatory audits for high-risk AI systems and a $2B joint research fund. Implementation begins Q1 2027.
+            </div>
+          </div>
+          <div class="article-image">
+            <div class="article-image-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>World</span>
+            </div>
+          </div>
+        </div>
+        <div class="article-footer">
+          <div class="article-meta">
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              2 min read
+            </div>
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              David E. Sanger
+            </div>
+            <div class="article-meta-item">1h ago</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="verify-badge verified" onclick="openVerify(this)" data-tooltip="Verify sources">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+              Verified
+            </button>
+            <button class="btn btn-outline" style="font-size:12px; padding:4px 12px; height:auto;" onclick="openReading()">Read AI Brief</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article 2 -->
+      <div class="article-card fade-in" style="animation-delay:0.08s;">
+        <div class="article-card-inner">
+          <div class="article-body">
+            <div class="article-category" style="background:#E8F5E9; color:#1B5E20;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              Finance
+            </div>
+            <div class="article-title">Federal Reserve Signals Pause in Rate Cycle as Inflation Cools to 2.1%</div>
+            <div class="summary-text">The central bank indicated it may hold interest rates steady through year-end after the latest consumer price index showed inflation reaching its closest point to the 2% target in four years.</div>
+            <div class="article-summary-ai">
+              <div class="ai-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                AI Summary
+              </div>
+              Fed Chair confirmed no rate cuts before September at earliest. Markets rallied 1.4% on the news. Mortgage rates may ease slightly. Good news for borrowers, mixed for savers.
+            </div>
+          </div>
+          <div class="article-image">
+            <div class="article-image-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>Finance</span>
+            </div>
+          </div>
+        </div>
+        <div class="article-footer">
+          <div class="article-meta">
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              3 min read
+            </div>
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Jeanna Smialek
+            </div>
+            <div class="article-meta-item">3h ago</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="verify-badge verified" onclick="openVerify(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+              Verified
+            </button>
+            <button class="btn btn-outline" style="font-size:12px; padding:4px 12px; height:auto;" onclick="openReading()">Read AI Brief</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article 3 -->
+      <div class="article-card fade-in" style="animation-delay:0.16s;">
+        <div class="article-card-inner">
+          <div class="article-body">
+            <div class="article-category" style="background:#FFF3E0; color:#E65100;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+              Climate
+            </div>
+            <div class="article-title">Amazon Basin Records Wettest Season in 60 Years, Scientists Link to Ocean Warming</div>
+            <div class="summary-text">Record rainfall across the Amazon has brought both relief to drought-stricken regions and new flooding challenges, as researchers confirm a direct correlation with elevated Atlantic sea surface temperatures.</div>
+            <div class="article-summary-ai">
+              <div class="ai-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                AI Summary
+              </div>
+              400% above-average rainfall recorded. 3 indigenous territories affected. Scientists warn this pattern may repeat through 2028 due to persistent ocean warming. Emergency aid deployed to 12 regions.
+            </div>
+          </div>
+          <div class="article-image">
+            <div class="article-image-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+              <span>Climate</span>
+            </div>
+          </div>
+        </div>
+        <div class="article-footer">
+          <div class="article-meta">
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              4 min read
+            </div>
+            <div class="article-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Henry Fountain
+            </div>
+            <div class="article-meta-item">5h ago</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="verify-badge verified" onclick="openVerify(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+              Verified
+            </button>
+            <button class="btn btn-outline" style="font-size:12px; padding:4px 12px; height:auto;" onclick="openReading()">Read AI Brief</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUMMARIZE PAGE -->
+  <div id="page-summarize" class="page-content" style="display:none;">
+    <div class="page-header">
+      <div>
+        <div class="page-title">AI Summarizer</div>
+        <div class="page-subtitle">Paste a URL or pick a newspaper and section to generate smart summaries</div>
+      </div>
+    </div>
+
+    <div class="summarizer-panel">
+      <div class="summarizer-topbar">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="font-size:15px; font-weight:500; color:var(--slate-800);">Configure Summary</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:var(--slate-400);">Powered by</span>
+            <span style="font-size:12.5px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:3px 9px; border-radius:99px;">Claude AI</span>
+          </div>
+        </div>
+        <div class="summarizer-tabs">
+          <button class="summarizer-tab active" onclick="switchTab(this, 'tab-url')">From URL</button>
+          <button class="summarizer-tab" onclick="switchTab(this, 'tab-paper')">From Newspaper</button>
+          <button class="summarizer-tab" onclick="switchTab(this, 'tab-topic')">By Topic</button>
+        </div>
+      </div>
+
+      <!-- Tab: URL -->
+      <div id="tab-url" class="summarizer-content">
+        <div class="url-input-row">
+          <div class="url-input">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--slate-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <input type="url" id="urlInput" placeholder="https://www.nytimes.com/article/..." />
+          </div>
+          <button class="btn btn-primary" onclick="runSummarize()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Summarize
+          </button>
+        </div>
+
+        <div class="section-picker">
+          <span class="section-label">Focus on:</span>
+          <button class="section-chip active" onclick="toggleChip(this)">All sections</button>
+          <button class="section-chip" onclick="toggleChip(this)">Key facts only</button>
+          <button class="section-chip" onclick="toggleChip(this)">Quotes &amp; data</button>
+          <button class="section-chip" onclick="toggleChip(this)">Background context</button>
+          <button class="section-chip" onclick="toggleChip(this)">Implications</button>
+        </div>
+
+        <div style="padding:0 24px 24px;">
+          <div style="font-size:12px; color:var(--slate-400); margin-bottom:10px; font-weight:500; letter-spacing:0.4px; text-transform:uppercase;">Output length</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="section-chip active" onclick="toggleLength(this)">Bullet points</button>
+            <button class="section-chip" onclick="toggleLength(this)">Short paragraph</button>
+            <button class="section-chip" onclick="toggleLength(this)">Detailed breakdown</button>
+          </div>
+        </div>
+
+        <div id="summaryLoading" class="loading-state" style="display:none; padding:32px 24px;">
+          <div class="loader-ring"></div>
+          <div class="loading-text">Analyzing article…</div>
+          <div class="loading-sub">Reading and extracting key information</div>
+        </div>
+
+        <div id="summaryResult" class="summary-output" style="padding:0 24px 24px;">
+          <div class="summary-header">
+            <div class="summary-source">
+              <div class="source-logo" style="background:#F0F0F0; color:#1A1A1A;">NYT</div>
+              <div>
+                <div class="source-name">The New York Times</div>
+                <div class="source-info">nytimes.com · Verified source</div>
+              </div>
+            </div>
+            <div class="summary-actions">
+              <button class="verify-badge verified">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+                Source Verified
+              </button>
+              <button class="btn btn-outline" style="font-size:12px; padding:5px 12px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
+            </div>
+          </div>
+
+          <div class="verify-panel">
+            <div class="verify-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Source Verification — Cross-checked with 3 independent sources
+            </div>
+            <div class="verify-sources">
+              <div class="verify-source-item">
+                <span class="verify-source-name">Reuters</span>
+                <span class="verify-source-status">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/></svg>
+                  Corroborated
+                </span>
+              </div>
+              <div class="verify-source-item">
+                <span class="verify-source-name">The Guardian</span>
+                <span class="verify-source-status">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/></svg>
+                  Corroborated
+                </span>
+              </div>
+              <div class="verify-source-item">
+                <span class="verify-source-name">BBC News</span>
+                <span class="verify-source-status">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/></svg>
+                  Corroborated
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div id="aiSummaryContent" style="font-size:14px; color:var(--slate-700); line-height:1.75;"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Paper -->
+      <div id="tab-paper" class="summarizer-content" style="display:none;">
+        <div class="newspaper-picker-inline">
+          <label>Newspaper:</label>
+          <select id="paperSelect">
+            <option>The New York Times</option>
+            <option>The Guardian</option>
+            <option>BBC News</option>
+            <option>Bloomberg</option>
+            <option>Reuters</option>
+            <option>Wall Street Journal</option>
+            <option>Times of India</option>
+            <option>Al Jazeera</option>
+            <option>The Hindu</option>
+          </select>
+        </div>
+
+        <div class="section-picker">
+          <span class="section-label">Section:</span>
+          <button class="section-chip active" onclick="toggleSectionChip(this)">Front Page</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">World</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Finance</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Technology</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Sports</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Science</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Opinion</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Health</button>
+          <button class="section-chip" onclick="toggleSectionChip(this)">Culture</button>
+        </div>
+
+        <div style="padding:0 24px 24px; display:flex; gap:10px;">
+          <button class="btn btn-primary" onclick="runSummarize()" style="flex:1; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Generate Today's Brief
+          </button>
+          <button class="btn btn-outline" onclick="showPage('dashboard')">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Tab: Topic -->
+      <div id="tab-topic" class="summarizer-content" style="display:none;">
+        <div class="url-input-row">
+          <div class="url-input">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--slate-400)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="e.g. India elections, AI regulation, climate summit…" />
+          </div>
+          <button class="btn btn-primary" onclick="runSummarize()">Search &amp; Summarize</button>
+        </div>
+        <div class="section-picker">
+          <span class="section-label">Sources:</span>
+          <button class="section-chip active" onclick="toggleChip(this)">All newspapers</button>
+          <button class="section-chip" onclick="toggleChip(this)">Indian press</button>
+          <button class="section-chip" onclick="toggleChip(this)">Global wire</button>
+          <button class="section-chip" onclick="toggleChip(this)">Financial press</button>
+        </div>
+        <div style="padding:0 24px 24px; color:var(--slate-400); font-size:13px;">
+          Topic search pulls from all 9 tracked newspapers and synthesizes a unified summary with source attribution.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SAVED PAGE -->
+  <div id="page-saved" class="page-content" style="display:none;">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Saved Summaries</div>
+        <div class="page-subtitle">Your reading list and bookmarked articles</div>
+      </div>
+    </div>
+    <div class="empty-state">
+      <div class="empty-icon">🔖</div>
+      <div class="empty-title">No saved summaries yet</div>
+      <div class="empty-sub">Click "Save" on any article summary to add it here</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- READING MODAL -->
+<div class="reading-modal" id="readingModal" onclick="closeReadingOutside(event)">
+  <div class="reading-panel" id="readingPanel">
+    <div class="reading-panel-header">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <div style="width:24px; height:24px; background:#F0F0F0; border-radius:5px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:10px; color:#1A1A1A; font-weight:700;">NYT</div>
+          <span style="font-size:13px; color:var(--slate-500);">The New York Times · World</span>
+        </div>
+        <div style="font-size:10px; font-weight:600; color:var(--slate-400); letter-spacing:0.6px; text-transform:uppercase; margin-bottom:2px;">AI Reading Brief</div>
+      </div>
+      <button class="btn btn-icon btn-outline" onclick="closeReading()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="reading-panel-body">
+
+      <div class="reading-title">G7 Leaders Reach Landmark Agreement on AI Governance Framework</div>
+
+      <div class="reading-meta">
+        <div class="reading-meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          David E. Sanger
+        </div>
+        <div class="reading-meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          June 7, 2026
+        </div>
+        <div class="reading-meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          2 min read (original: 12 min)
+        </div>
+        <button class="verify-badge verified" style="margin-left:4px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+          Verified
+        </button>
+      </div>
+
+      <div class="reading-section-title">AI Summary</div>
+
+      <div class="ai-summary-block">
+        <p>G7 nations concluded a multi-day summit with a binding agreement establishing the first comprehensive international framework for artificial intelligence governance. The accord mandates transparency requirements, safety testing protocols, and responsible data usage standards for AI systems operating across member nations.</p>
+      </div>
+
+      <div class="reading-section-title">Key Points</div>
+
+      <div class="key-points">
+        <div class="key-point">
+          <div class="key-point-num">1</div>
+          <p>All G7 nations must implement mandatory third-party audits for high-risk AI systems — including those used in healthcare, finance, and law enforcement — by March 2027.</p>
+        </div>
+        <div class="key-point">
+          <div class="key-point-num">2</div>
+          <p>A joint $2 billion international AI Safety Research Fund will be established, with contributions proportional to each nation's GDP. Priorities include autonomous weapons, deepfakes, and economic disruption.</p>
+        </div>
+        <div class="key-point">
+          <div class="key-point-num">3</div>
+          <p>Companies deploying frontier AI models must disclose training data sources and model capabilities to a new independent oversight body co-chaired by the EU and US.</p>
+        </div>
+        <div class="key-point">
+          <div class="key-point-num">4</div>
+          <p>Nations not in the G7 are invited to accede to the framework — China and India have already signaled interest in observer status discussions.</p>
+        </div>
+      </div>
+
+      <div class="reading-section-title">Sentiment Analysis</div>
+
+      <div style="margin-bottom:20px;">
+        <div class="sentiment-bar-wrap">
+          <div class="sentiment-label"><span>Optimistic framing</span><span>72%</span></div>
+          <div class="sentiment-bar"><div class="sentiment-fill positive" style="width:72%;"></div></div>
+        </div>
+        <div class="sentiment-bar-wrap">
+          <div class="sentiment-label"><span>Critical voices cited</span><span>18%</span></div>
+          <div class="sentiment-bar"><div class="sentiment-fill negative" style="width:18%;"></div></div>
+        </div>
+        <div class="sentiment-bar-wrap">
+          <div class="sentiment-label"><span>Neutral reporting</span><span>10%</span></div>
+          <div class="sentiment-bar"><div class="sentiment-fill neutral" style="width:10%;"></div></div>
+        </div>
+      </div>
+
+      <div class="reading-section-title">Source Verification</div>
+
+      <div class="verify-panel" style="margin-bottom:8px;">
+        <div class="verify-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Cross-referenced with 4 independent sources
+        </div>
+        <div class="verify-sources">
+          <div class="verify-source-item">
+            <span class="verify-source-name">Reuters — "G7 AI Pact Marks Historic Step"</span>
+            <span class="verify-source-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M9 12l2 2 4-4"/></svg>Matches</span>
+          </div>
+          <div class="verify-source-item">
+            <span class="verify-source-name">BBC News — "AI Rules Agreed by World Powers"</span>
+            <span class="verify-source-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M9 12l2 2 4-4"/></svg>Matches</span>
+          </div>
+          <div class="verify-source-item">
+            <span class="verify-source-name">The Guardian — "G7 Tech Summit Delivers AI Deal"</span>
+            <span class="verify-source-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M9 12l2 2 4-4"/></svg>Matches</span>
+          </div>
+          <div class="verify-source-item">
+            <span class="verify-source-name">Financial Times — "AI Governance Accord Signed"</span>
+            <span class="verify-source-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M9 12l2 2 4-4"/></svg>Matches</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-primary" style="flex:1; justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Save Summary
+        </button>
+        <button class="btn btn-outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share
+        </button>
+        <a href="#" class="btn btn-outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Read original
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pages = ['dashboard', 'summarize', 'saved'];
+
+  function showPage(name) {
+    pages.forEach(p => {
+      document.getElementById('page-' + p).style.display = p === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.nav-item').forEach(el => {
+      el.classList.remove('active');
+    });
+  }
+
+  function selectPaper(id) {
+    document.querySelectorAll('.newspaper-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  function selectAndShowPaper(id) {
+    document.querySelectorAll('.paper-card').forEach(el => el.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+  }
+
+  function openReading() {
+    document.getElementById('readingModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReading() {
+    document.getElementById('readingModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeReadingOutside(e) {
+    if (e.target === document.getElementById('readingModal')) closeReading();
+  }
+
+  function openVerify(btn) {
+    openReading();
+  }
+
+  function switchTab(btn, tabId) {
+    document.querySelectorAll('.summarizer-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    ['tab-url', 'tab-paper', 'tab-topic'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = id === tabId ? 'block' : 'none';
+    });
+  }
+
+  function toggleChip(btn) {
+    const parent = btn.closest('.section-picker') || btn.closest('div');
+    const siblings = parent.querySelectorAll('.section-chip');
+    siblings.forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function toggleSectionChip(btn) {
+    const parent = btn.closest('.section-picker');
+    const siblings = parent.querySelectorAll('.section-chip');
+    siblings.forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function toggleLength(btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.section-chip').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  const mockSummaries = [
+    {
+      title: 'G7 AI Framework',
+      points: [
+        '• Binding audits for high-risk AI by Q1 2027',
+        '• $2B joint AI safety research fund established',
+        '• Mandatory transparency on training data and model capabilities',
+        '• China and India invited as observer states'
+      ]
+    },
+    {
+      title: 'Federal Reserve Update',
+      points: [
+        '• Rates held steady — no cuts before September 2026',
+        '• Inflation at 2.1%, closest to target in 4 years',
+        '• Markets rallied 1.4% on announcement',
+        '• Mortgage rates expected to ease slightly Q3'
+      ]
+    },
+    {
+      title: 'Amazon Climate Report',
+      points: [
+        '• 400% above-average rainfall in Amazon basin',
+        '• Linked directly to Atlantic ocean warming patterns',
+        '• 3 indigenous territories require emergency relief',
+        '• Scientists warn pattern may persist through 2028'
+      ]
+    }
+  ];
+
+  let summaryIdx = 0;
+
+  function runSummarize() {
+    const loading = document.getElementById('summaryLoading');
+    const result = document.getElementById('summaryResult');
+    const content = document.getElementById('aiSummaryContent');
+
+    if (!loading || !result || !content) {
+      openReading();
+      return;
+    }
+
+    result.classList.remove('visible');
+    loading.style.display = 'flex';
+
+    const mock = mockSummaries[summaryIdx % mockSummaries.length];
+    summaryIdx++;
+
+    setTimeout(() => {
+      loading.style.display = 'none';
+      content.innerHTML = `
+        <div style="font-weight:600; color:var(--slate-800); margin-bottom:10px; font-size:15px;">${mock.title}</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          ${mock.points.map(p => `
+            <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 14px; background:var(--slate-50); border-radius:var(--radius-md); border:1px solid var(--slate-100);">
+              <span style="color:var(--accent); font-weight:700; flex-shrink:0;">✦</span>
+              <span style="font-size:13.5px; color:var(--slate-700); line-height:1.65;">${p.replace('• ', '')}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:16px; font-size:12px; color:var(--slate-400); display:flex; align-items:center; gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Generated by Claude AI · Cross-checked with 3 sources
+        </div>
+      `;
+      result.classList.add('visible');
+    }, 1800);
+  }
+
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.value.trim()) {
+      showPage('summarize');
+    }
+  });
+</script>
+</body>
+</html>

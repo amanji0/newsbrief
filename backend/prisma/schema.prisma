@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  title       String
+  summary     String
+  source      String
+  url         String   @unique
+  imageUrl    String?
+  category    String   @default("General")
+  examContext String?  // AI generated analysis for government exams
+  createdAt   DateTime @default(now())
+}
