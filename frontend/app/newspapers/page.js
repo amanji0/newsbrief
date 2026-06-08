@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
-import { Library, ArrowRight, ChevronLeft, Calendar, FileText } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Library, ArrowRight, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Printer } from 'lucide-react';
+import Image from 'next/image';
 
 const NEWSPAPERS = [
   { id: 'hindu', name: 'The Hindu', color: '#1B365D', edition: 'Chennai Edition' },
@@ -9,52 +10,36 @@ const NEWSPAPERS = [
   { id: 'guardian', name: 'The Guardian', color: '#052962', edition: 'UK Edition' },
 ];
 
-const MOCK_DOCUMENT = {
-  hindu: [
-    {
-      section: 'Front Page',
-      articles: [
-        {
-          title: 'Monsoon advances rapidly across Southern Peninsula',
-          author: 'Special Correspondent',
-          content: `The southwest monsoon has advanced into more parts of the central Arabian Sea, most parts of Karnataka, Maharashtra, and some parts of Andhra Pradesh, the India Meteorological Department (IMD) said on Tuesday.
-
-The rapid progression is expected to bring significant relief to the agricultural sector, which has been grappling with water shortages. The IMD forecast suggests normal to above-normal rainfall for the upcoming month.
-
-"Conditions are favorable for further advance of Southwest Monsoon into more parts of Maharashtra, Chhattisgarh, Odisha, Coastal Andhra Pradesh and Northwest Bay of Bengal during next 3-4 days," the weather bulletin noted.
-
-Farmers in the region have been advised to begin sowing operations as soil moisture reaches optimal levels.`
-        },
-        {
-          title: 'New electric vehicle policy announced for major metropolitan cities',
-          author: 'Business Bureau',
-          content: `In a major push towards green mobility, the government today announced a comprehensive electric vehicle (EV) policy targeting major metropolitan areas. The policy includes expanded subsidies for two-wheelers and commercial fleet vehicles.
-
-The transport ministry stated that the new framework aims to achieve 30% EV penetration in public transport by 2030.
-
-Key highlights include the establishment of charging infrastructure every 5 kilometers in urban centers and tax exemptions for battery manufacturing plants. Industry leaders have largely welcomed the move, citing it as a necessary step for sustainable urban development.`
-        }
-      ]
-    },
-    {
-      section: 'World News',
-      articles: [
-        {
-          title: 'Global markets react to shifting central bank policies',
-          author: 'Reuters',
-          content: `Wall Street saw volatile trading on Monday as investors digested mixed signals from global central banks regarding interest rate trajectories. The S&P 500 closed relatively flat after a turbulent session.
-
-European markets fared slightly better following optimistic comments from the European Central Bank regarding inflation control. 
-
-Analysts remain cautious, noting that the coming weeks of corporate earnings reports will likely dictate market momentum for the rest of the quarter.`
-        }
-      ]
-    }
-  ]
-};
+// Mock data holding the generated realistic newspaper pages
+const MOCK_PAGES = [
+  '/newspaper_page_1.png', // Front Page
+  '/newspaper_page_2.png', // Inside Page
+];
 
 export default function NewspapersPage() {
   const [selectedPaper, setSelectedPaper] = useState(null);
+  
+  // E-Paper Viewer State
+  const [currentPage, setCurrentPage] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const containerRef = useRef(null);
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.25, 2.5));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
+  
+  const handleNextPage = () => {
+    if (currentPage < MOCK_PAGES.length - 1) {
+      setCurrentPage(prev => prev + 1);
+      setZoomLevel(1); // Reset zoom on page turn
+    }
+  };
+  
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+      setZoomLevel(1);
+    }
+  };
 
   // View 1: Grid of Newspapers
   if (!selectedPaper) {
@@ -62,11 +47,11 @@ export default function NewspapersPage() {
       <div className="w-full max-w-5xl mx-auto animate-in fade-in duration-300">
         <div className="flex items-center gap-3 mb-8">
           <Library size={28} className="text-[var(--primary-color)]" />
-          <h1 className="text-3xl font-bold m-0 tracking-tight">E-Paper Library</h1>
+          <h1 className="text-3xl font-bold m-0 tracking-tight">Authentic E-Paper Library</h1>
         </div>
         
         <p className="text-[var(--text-muted)] mb-8 max-w-2xl text-lg">
-          Read the entire newspaper as a continuous, distraction-free document.
+          Read full daily editions exactly as they were printed. Select a publication below to launch the immersive E-Paper viewer.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,7 +68,7 @@ export default function NewspapersPage() {
                 >
                   {paper.name.charAt(0)}
                 </div>
-                <ArrowRight size={20} className="text-[var(--text-muted)] group-hover:text-[var(--primary-color)] transition-colors" />
+                <Printer size={20} className="text-[var(--text-muted)] group-hover:text-[var(--primary-color)] transition-colors" />
               </div>
               
               <div>
@@ -97,97 +82,92 @@ export default function NewspapersPage() {
     );
   }
 
-  const documentData = MOCK_DOCUMENT[selectedPaper.id] || MOCK_DOCUMENT.hindu; // fallback for mock
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  // View 2: Full Document Viewer (E-Paper)
+  // View 2: Immersive Image-based E-Paper Viewer
   return (
-    <div className="w-full max-w-4xl mx-auto relative animate-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed inset-0 z-[200] bg-[#1C1C1E] flex flex-col animate-in fade-in duration-300 overflow-hidden">
       
-      {/* Document Sticky Header */}
-      <div className="sticky top-0 z-[100] bg-[var(--surface-color)]/90 backdrop-blur-xl border-b border-[var(--border-color)] p-4 md:px-8 flex items-center justify-between -mx-4 md:-mx-8 mb-8 shadow-sm">
-        <button 
-          onClick={() => setSelectedPaper(null)}
-          className="flex items-center gap-2 text-[var(--primary-color)] hover:opacity-80 transition-opacity font-medium text-sm bg-[var(--accent-light)] px-3 py-1.5 rounded-full"
-        >
-          <ChevronLeft size={16} />
-          Library
-        </button>
+      {/* Top Toolbar */}
+      <div className="h-16 bg-[#2C2C2E]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-8 shrink-0">
         
-        <div className="flex items-center gap-2">
-          <FileText size={16} className="text-[var(--text-muted)] hidden md:block" />
-          <span className="font-semibold text-[var(--text-main)] text-sm md:text-base">{selectedPaper.name} — Document View</span>
-        </div>
-      </div>
-
-      {/* Document Content */}
-      <div className="bg-white rounded-none md:rounded-3xl shadow-none md:shadow-xl border-0 md:border border-[var(--border-color)] overflow-hidden mb-12">
-        
-        {/* Newspaper Title Header */}
-        <div 
-          className="px-6 py-12 md:p-16 text-center text-white relative overflow-hidden"
-          style={{ backgroundColor: selectedPaper.color }}
-        >
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] mix-blend-overlay"></div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 relative z-10" style={{ fontFamily: 'Georgia, serif' }}>
-            {selectedPaper.name}
-          </h1>
-          <div className="flex items-center justify-center gap-6 text-sm font-medium tracking-wide uppercase opacity-90 relative z-10">
-            <span>{selectedPaper.edition}</span>
-            <span className="w-1 h-1 rounded-full bg-white"></span>
-            <span className="flex items-center gap-2"><Calendar size={14} /> {today}</span>
-          </div>
-        </div>
-
-        {/* Sections & Articles Continuous Scroll */}
-        <div className="px-6 py-10 md:p-16">
-          {documentData.map((section, idx) => (
-            <div key={idx} className="mb-16 last:mb-0">
-              
-              {/* Section Divider */}
-              <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-xl md:text-2xl font-bold text-[var(--primary-color)] tracking-tight uppercase">
-                  {section.section}
-                </h2>
-                <div className="flex-1 h-[2px] bg-[var(--border-color)]"></div>
-              </div>
-
-              {/* Articles in this section */}
-              <div className="flex flex-col gap-12">
-                {section.articles.map((article, aIdx) => (
-                  <article key={aIdx} className="prose prose-lg max-w-none">
-                    <h3 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] leading-tight mb-3 tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
-                      {article.title}
-                    </h3>
-                    
-                    {article.author && (
-                      <p className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-6">
-                        By {article.author}
-                      </p>
-                    )}
-                    
-                    <div className="text-[var(--text-main)] leading-relaxed space-y-5 text-[1.05rem] md:text-[1.15rem]">
-                      {article.content.split('\n\n').map((paragraph, pIdx) => (
-                        <p key={pIdx}>{paragraph}</p>
-                      ))}
-                    </div>
-
-                    {aIdx < section.articles.length - 1 && (
-                      <div className="w-16 h-1 bg-[var(--border-color)] mx-auto mt-12 rounded-full"></div>
-                    )}
-                  </article>
-                ))}
-              </div>
-
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setSelectedPaper(null)}
+            className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm bg-white/5 px-3 py-1.5 rounded-full"
+          >
+            <ChevronLeft size={16} />
+            Library
+          </button>
+          
+          <div className="hidden md:flex items-center gap-2 border-l border-white/10 pl-4">
+            <div className="w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: selectedPaper.color }}>
+              {selectedPaper.name.charAt(0)}
             </div>
-          ))}
-
-          {/* End of Document Footer */}
-          <div className="mt-16 pt-8 border-t border-[var(--border-color)] text-center text-[var(--text-muted)] text-sm">
-            <p>End of {selectedPaper.name} Document Edition.</p>
+            <span className="font-semibold text-white/90 text-sm">{selectedPaper.name}</span>
+            <span className="text-white/40 text-xs ml-2">— E-Paper Edition</span>
           </div>
         </div>
+
+        {/* Viewer Controls */}
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center bg-black/30 rounded-lg p-1 border border-white/10">
+            <button onClick={handleZoomOut} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Zoom Out">
+              <ZoomOut size={16} />
+            </button>
+            <span className="text-white/50 text-xs font-medium w-12 text-center select-none">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button onClick={handleZoomIn} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Zoom In">
+              <ZoomIn size={16} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 ml-2">
+            <button 
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              className="p-1.5 rounded bg-black/30 text-white border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="text-white/70 text-xs font-medium min-w-[60px] text-center">
+              Pg {currentPage + 1} / {MOCK_PAGES.length}
+            </span>
+            <button 
+              onClick={handleNextPage}
+              disabled={currentPage === MOCK_PAGES.length - 1}
+              className="p-1.5 rounded bg-black/30 text-white border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {/* Interactive Paper Viewer Area */}
+      <div 
+        ref={containerRef}
+        className="flex-1 overflow-auto bg-[#1C1C1E] flex items-center justify-center p-4 md:p-8 relative"
+        style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}
+      >
+        <div 
+          className="relative transition-transform duration-200 ease-out shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-white"
+          style={{ 
+            transform: `scale(${zoomLevel})`,
+            transformOrigin: zoomLevel > 1 ? 'top left' : 'center center',
+            width: 'min(100%, 800px)', // Standard broadsheet aspect roughly
+            aspectRatio: '1 / 1.3'
+          }}
+        >
+          {/* We use standard img to let it handle natural sizing within our aspect ratio constraints easily */}
+          <img 
+            src={MOCK_PAGES[currentPage]} 
+            alt={`Page ${currentPage + 1} of ${selectedPaper.name}`}
+            className="w-full h-full object-contain pointer-events-none"
+          />
+        </div>
+      </div>
+
     </div>
   );
 }
